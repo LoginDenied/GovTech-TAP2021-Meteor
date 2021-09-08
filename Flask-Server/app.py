@@ -56,5 +56,40 @@ def addMember():
     except:
         abort(400)
 
+@app.route("/list-households", methods=["GET"])
+def listHouseholds():
+    conn = pymysql.connect(
+        host=SQL_HOST,
+        db=SQL_DB,
+        user=SQL_USER,
+        password=SQL_PASSWORD
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM HouseHold AS H, MemberLivesIn as M WHERE H.HouseID = M.HouseID ORDER BY H.HouseID ASC;")
+    housesInformation = cursor.fetchall()
+    if len(housesInformation) == 0:
+        return jsonify({"Message" : "No houses in database"}) 
+    output = {"Houses" : []}
+    currentHouse = {"HousingType" : housesInformation[0][1], "Members" : []}
+    currentHouseID = housesInformation[0][0]
+    for houseInformation in housesInformation:
+        # If reach new house, save previous house and reset
+        if houseInformation[0] != currentHouseID:
+            output["Houses"].append(currentHouse)
+            currentHouse = {"HousingType" : houseInformation[1], "Members" : []}
+            currentHouseID = houseInformation[0]
+        member = {}
+        member["Name"] = houseInformation[2]
+        member["Gender"] = houseInformation[3]
+        member["MaritalStatus"] = houseInformation[4]
+        member["Spouse"] = houseInformation[5]
+        member["OccupationType"] = houseInformation[6]
+        member["AnnualIncome"] = houseInformation[7]
+        member["DOB"] = houseInformation[8]
+        currentHouse["Members"].append(member)
+    # Save the last house as there wasnt a houseid change
+    output["Houses"].append(currentHouse)
+    return jsonify(output) 
+
 if __name__ == "__main__":
     app.run(debug=True)
