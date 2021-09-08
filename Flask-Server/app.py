@@ -91,5 +91,39 @@ def listHouseholds():
     output["Houses"].append(currentHouse)
     return jsonify(output) 
 
+@app.route("/show-household", methods=["POST"])
+def showHousehold():
+    json_data = request.json
+    if json_data == None or "HouseID" not in json_data:
+        return jsonify({"Error" : "HouseID must be present in a json format"}) 
+    conn = pymysql.connect(
+        host=SQL_HOST,
+        db=SQL_DB,
+        user=SQL_USER,
+        password=SQL_PASSWORD
+    )
+    cursor = conn.cursor()
+    # Performing two queries instead of a merge as not all data is needed
+    cursor.execute("SELECT H.HousingType FROM HouseHold AS H WHERE HouseID = %s", json_data["HouseID"])
+    housingInformation = cursor.fetchone()
+    if housingInformation == None:
+        return jsonify({"Error" : "HouseID not in database"}) 
+    housingType = housingInformation[0]
+
+    cursor.execute("SELECT M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM MemberLivesIn AS M WHERE M.HouseID = %s", json_data["HouseID"])
+    membersInformation = cursor.fetchall()
+    output = {"HousingType" : housingType, "Members" : []}
+    for memberInformation in membersInformation:
+        member = {}
+        member["Name"] = memberInformation[0]
+        member["Gender"] = memberInformation[1]
+        member["MaritalStatus"] = memberInformation[2]
+        member["Spouse"] = memberInformation[3]
+        member["OccupationType"] = memberInformation[4]
+        member["AnnualIncome"] = memberInformation[5]
+        member["DOB"] = memberInformation[6]
+        output["Members"].append(member)
+    return jsonify(output)
+
 if __name__ == "__main__":
     app.run(debug=True)
