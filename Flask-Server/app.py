@@ -135,5 +135,52 @@ def searchGrants():
 
     return jsonify(output)
 
+@app.route("/delete-household", methods=["POST"])
+def deleteHousehold():
+    json_data = request.json
+    if json_data == None or "HouseID" not in json_data:
+        return jsonify({"Error" : "HouseID must be present in a json format"}) 
+    conn = pymysql.connect(
+        host=SQL_HOST,
+        db=SQL_DB,
+        user=SQL_USER,
+        password=SQL_PASSWORD
+    )
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM HouseHold WHERE HouseID = %s", json_data["HouseID"])
+    except pymysql.err.IntegrityError:
+        return jsonify({"Error" : "Unable to delete household as there are people still in the household"})
+    except:
+        abort(400)
+    conn.commit()
+    deletedCount = cursor.rowcount
+    conn.close()
+    if deletedCount == 1:
+        return jsonify({"HouseID" : json_data["HouseID"]})
+    else:
+        return jsonify({"Error" : "House not present in system"})
+
+@app.route("/delete-member", methods=["POST"])
+def deleteMember():
+    json_data = request.json
+    if json_data == None or "Name" not in json_data:
+        return jsonify({"Error" : "Name must be present in a json format"}) 
+    conn = pymysql.connect(
+        host=SQL_HOST,
+        db=SQL_DB,
+        user=SQL_USER,
+        password=SQL_PASSWORD
+    )
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM MemberLivesIn WHERE Name = %s", json_data["Name"])
+    conn.commit()
+    deletedCount = cursor.rowcount
+    conn.close()
+    if deletedCount == 1:
+        return jsonify({"Name" : json_data["Name"]})
+    else:
+        return jsonify({"Error" : "House not present in system"})
+
 if __name__ == "__main__":
     app.run(debug=True)
