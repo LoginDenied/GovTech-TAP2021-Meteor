@@ -1,18 +1,12 @@
-import pymysql
 from db_output_parsers import *
+from db_conn import *
+
 from temp import *
 
-def searchStudentEncouragementBonus(additionalIncomeLimit, householdSize):
+def searchStudentEncouragementBonus(conn, cursor, additionalIncomeLimit, householdSize):
     incomeLimit = 150000
     if additionalIncomeLimit != None:
         incomeLimit = min(additionalIncomeLimit, incomeLimit)
-    conn = pymysql.connect(
-        host=SQL_HOST,
-        db=SQL_DB,
-        user=SQL_USER,
-        password=SQL_PASSWORD
-    )
-    cursor = conn.cursor()
     if householdSize == None:
         cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
@@ -35,17 +29,10 @@ def searchStudentEncouragementBonus(additionalIncomeLimit, householdSize):
     output = parse_household_with_member_information(housesInformation)
     return output
 
-def searchYOLOGSTGrant(additionalIncomeLimit, householdSize):
+def searchYOLOGSTGrant(conn, cursor, additionalIncomeLimit, householdSize):
     incomeLimit = 100000
     if additionalIncomeLimit != None:
         incomeLimit = min(additionalIncomeLimit, incomeLimit)
-    conn = pymysql.connect(
-        host=SQL_HOST,
-        db=SQL_DB,
-        user=SQL_USER,
-        password=SQL_PASSWORD
-    )
-    cursor = conn.cursor()
     if householdSize == None:
         cursor.execute("SELECT H.HouseID, H.HousingType FROM \
             HouseHold as H, \
@@ -79,15 +66,8 @@ def processSearchGrantsParams(incomeLimit, householdSize):
         parameters.append(householdSize)
     return nested_queries, equality_matching, parameters
 
-def searchFamilyTogethernessScheme(incomeLimit, householdSize):
+def searchFamilyTogethernessScheme(conn, cursor, incomeLimit, householdSize):
     nested_queries, equality_matching, parameters = processSearchGrantsParams(incomeLimit, householdSize)
-    conn = pymysql.connect(
-        host=SQL_HOST,
-        db=SQL_DB,
-        user=SQL_USER,
-        password=SQL_PASSWORD
-    )
-    cursor = conn.cursor()
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
@@ -105,15 +85,8 @@ def searchFamilyTogethernessScheme(incomeLimit, householdSize):
     output = parse_household_with_member_information(housesInformation)
     return output
 
-def searchElderBonus(incomeLimit, householdSize):
+def searchElderBonus(conn, cursor, incomeLimit, householdSize):
     nested_queries, equality_matching, parameters = processSearchGrantsParams(incomeLimit, householdSize)
-    conn = pymysql.connect(
-        host=SQL_HOST,
-        db=SQL_DB,
-        user=SQL_USER,
-        password=SQL_PASSWORD
-    )
-    cursor = conn.cursor()
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
@@ -127,15 +100,8 @@ def searchElderBonus(incomeLimit, householdSize):
     output = parse_household_with_member_information(housesInformation)
     return output
 
-def searchBabySunshineGrant(incomeLimit, householdSize):
+def searchBabySunshineGrant(conn, cursor, incomeLimit, householdSize):
     nested_queries, equality_matching, parameters = processSearchGrantsParams(incomeLimit, householdSize)
-    conn = pymysql.connect(
-        host=SQL_HOST,
-        db=SQL_DB,
-        user=SQL_USER,
-        password=SQL_PASSWORD
-    )
-    cursor = conn.cursor()
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
