@@ -17,18 +17,18 @@ def searchStudentEncouragementBonus(additionalIncomeLimit, householdSize):
         cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
-            (SELECT DISTINCT (M.HouseID) FROM MemberLivesIn AS M WHERE M.OccupationType = 'Student' AND TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 16) AS AGE_FILTER, \
+            (SELECT M.Name FROM MemberLivesIn AS M WHERE M.OccupationType = 'Student' AND TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 16) AS AGE_FILTER, \
             (SELECT M.HouseID FROM MemberLivesIn AS M GROUP BY M.HouseID HAVING SUM(M.AnnualIncome) < %s) AS INCOME_FILTER \
-            WHERE H.HouseID = M.HouseID AND H.HouseID = AGE_FILTER.HouseID AND H.HouseID = INCOME_FILTER.HouseID ORDER BY HouseID ASC", 
+            WHERE H.HouseID = M.HouseID AND M.Name = AGE_FILTER.Name AND H.HouseID = INCOME_FILTER.HouseID ORDER BY HouseID ASC", 
             (incomeLimit))
     else:
         cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
-            (SELECT DISTINCT (M.HouseID) FROM MemberLivesIn AS M WHERE M.OccupationType = 'Student' AND TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 16) AS AGE_FILTER, \
+            (SELECT M.Name FROM MemberLivesIn AS M WHERE M.OccupationType = 'Student' AND TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 16) AS AGE_FILTER, \
             (SELECT M.HouseID FROM MemberLivesIn AS M GROUP BY M.HouseID HAVING SUM(M.AnnualIncome) < %s) AS INCOME_FILTER, \
             (SELECT M.HouseID FROM MemberLivesIn AS M GROUP BY M.HouseID HAVING COUNT(M.Name) <= %s) AS NUM_MEMBER_FILTER \
-            WHERE H.HouseID = M.HouseID AND H.HouseID = AGE_FILTER.HouseID AND H.HouseID = INCOME_FILTER.HouseID AND H.HouseID = NUM_MEMBER_FILTER.HouseID \
+            WHERE H.HouseID = M.HouseID AND M.Name = AGE_FILTER.Name AND H.HouseID = INCOME_FILTER.HouseID AND H.HouseID = NUM_MEMBER_FILTER.HouseID \
             ORDER BY HouseID ASC", 
             (incomeLimit, householdSize))
     housesInformation = cursor.fetchall()
@@ -91,10 +91,13 @@ def searchFamilyTogethernessScheme(incomeLimit, householdSize):
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
-            (SELECT DISTINCT (P1.HouseID) FROM MemberLivesIn AS P1, MemberLivesIn AS P2 WHERE P1.Gender = 'Male' AND P2.Gender = 'Female' AND P1.Spouse = P2.Name and P2.Spouse = P1.Name) AS PARTNER_FILTER, \
-            (SELECT DISTINCT (M.HouseID) From MemberLivesIn AS M WHERE TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 16) AS CHILD_AGE_FILTER"
+            ( \
+                (SELECT P1.HouseID, P1.Name FROM MemberLivesIn AS P1, MemberLivesIn AS P2 WHERE P1.Spouse = P2.Name AND P2.Spouse = P1.Name AND P1.HouseID = P2.HouseID) \
+                UNION \
+                (SELECT M.HouseID, M.Name From MemberLivesIn AS M WHERE TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 16) \
+            ) AS NAME_FILTER"
             + nested_queries
-            + "WHERE H.HouseID = M.HouseID AND H.HouseID = PARTNER_FILTER.HouseID AND H.HouseID = CHILD_AGE_FILTER.HouseID"
+            + "WHERE H.HouseID = M.HouseID AND M.Name = NAME_FILTER.Name AND H.HouseID = NAME_FILTER.HouseID"
             + equality_matching
             + "ORDER BY HouseID ASC",
             (parameters))
@@ -114,9 +117,9 @@ def searchElderBonus(incomeLimit, householdSize):
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
-            (SELECT DISTINCT (M.HouseID) FROM MemberLivesIn AS M WHERE TIMESTAMPDIFF(YEAR, M.DOB, NOW()) > 50) AS ELDER_FILTER"
+            (SELECT M.Name FROM MemberLivesIn AS M WHERE TIMESTAMPDIFF(YEAR, M.DOB, NOW()) > 50) AS ELDER_FILTER"
             + nested_queries
-            + "WHERE H.HouseID = M.HouseID AND H.HouseID = ELDER_FILTER.HouseID"
+            + "WHERE H.HouseID = M.HouseID AND M.Name = ELDER_FILTER.Name"
             + equality_matching
             + "ORDER BY HouseID ASC",
             (parameters))
@@ -136,7 +139,7 @@ def searchBabySunshineGrant(incomeLimit, householdSize):
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM \
             HouseHold as H, \
             MemberLivesIn AS M, \
-            (SELECT DISTINCT (M.Name) FROM MemberLivesIn AS M WHERE TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 5) AS BABY_FILTER"
+            (SELECT M.Name FROM MemberLivesIn AS M WHERE TIMESTAMPDIFF(YEAR, M.DOB, NOW()) < 5) AS BABY_FILTER"
             + nested_queries
             + "WHERE H.HouseID = M.HouseID AND M.Name = BABY_FILTER.Name"
             + equality_matching
