@@ -22,9 +22,8 @@ def createHousehold():
         conn.close()
         return jsonify({"HouseID" : houseID})
     except pymysql.err.IntegrityError:
-        # TODO: amend this error message
         conn.close()
-        return jsonify({"Error" : "HousingType must be either Landed/Condominium/HDB"}) 
+        return jsonify({"Error" : "HousingType is invalid"}) 
     except:
         conn.close()
         abort(400)
