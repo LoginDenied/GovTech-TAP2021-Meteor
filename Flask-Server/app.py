@@ -6,6 +6,10 @@ from db_conn import *
 app = Flask(__name__)
 app.config.from_object("config.Config")
 
+@app.route("/")
+def testing():
+    return "Hi"
+
 @app.route("/create-household", methods=["POST"])
 def createHousehold():
     json_data = request.json
@@ -75,16 +79,19 @@ def showHousehold():
         conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
+        
     # Performing two queries instead of a merge as not all data is needed
     cursor.execute("SELECT H.HousingType FROM HouseHold AS H WHERE HouseID = %s", json_data["HouseID"])
     housingInformation = cursor.fetchone()
-    conn.close()
+
     if housingInformation == None:
         return jsonify({"Error" : "HouseID not in database"}) 
     housingType = housingInformation[0]
 
     cursor.execute("SELECT M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM MemberLivesIn AS M WHERE M.HouseID = %s", json_data["HouseID"])
     membersInformation = cursor.fetchall()
+    conn.close()
+
     output = {"HousingType" : housingType, "Members" : []}
     for memberInformation in membersInformation:
         member = {}
@@ -177,4 +184,4 @@ def deleteMember():
         return jsonify({"Error" : "House not present in system"})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0")

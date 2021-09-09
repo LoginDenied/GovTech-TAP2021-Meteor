@@ -1,0 +1,27 @@
+version: "1"
+
+services:
+  flask:
+    build: ./Flask-Server
+    container_name: flask
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    links:
+      - mysql
+  mysql:
+    image: mysql:8.0.26
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: PASSWORD
+      MYSQL_USER: USERNAME
+      MYSQL_PASSWORD: PASSWORD
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./SQL:/docker-entrypoint-initdb.d
+volumes:
+  dbdata:

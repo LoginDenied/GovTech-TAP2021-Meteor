@@ -1,6 +1,10 @@
 CREATE DATABASE meteor;
 USE meteor;
 
+/* Grant user privileges */
+GRANT ALL PRIVILEGES ON meteor.* TO USERNAME;
+FLUSH PRIVILEGES;
+
 /* Lookup table for HouseHold */
 CREATE TABLE HousingType (
 	HousingType VARCHAR(255),
@@ -65,9 +69,11 @@ CREATE TABLE MemberLivesIn (
     OccupationType VARCHAR(255) NOT NULL,
     AnnualIncome FLOAT NOT NULL,
     DOB DATE NOT NULL,
+    HouseID INT NOT NULL,
     PRIMARY KEY (Name),
     FOREIGN KEY (Gender) REFERENCES Gender (Gender) ON UPDATE CASCADE ON DELETE NO ACTION,
     FOREIGN KEY (MaritalStatus) REFERENCES MaritalStatus (MaritalStatus) ON UPDATE CASCADE ON DELETE NO ACTION,
     FOREIGN KEY (OccupationType) REFERENCES OccupationType (OccupationType) ON UPDATE CASCADE ON DELETE NO ACTION,
-    FOREIGN KEY (Spouse) REFERENCES MemberLivesIn (Name) ON UPDATE CASCADE ON DELETE SET NULL
+    FOREIGN KEY (Spouse) REFERENCES MemberLivesIn (Name) ON UPDATE CASCADE ON DELETE SET NULL,
+    FOREIGN KEY (HouseID) REFERENCES HouseHold (HouseID) ON UPDATE CASCADE ON DELETE NO ACTION
 );
