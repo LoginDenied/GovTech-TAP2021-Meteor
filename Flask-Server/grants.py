@@ -1,8 +1,6 @@
 from db_output_parsers import *
 from db_conn import *
 
-from temp import *
-
 def searchStudentEncouragementBonus(conn, cursor, additionalIncomeLimit, householdSize):
     incomeLimit = 150000
     if additionalIncomeLimit != None:

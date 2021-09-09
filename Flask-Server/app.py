@@ -4,6 +4,7 @@ from grants import *
 from db_conn import *
 
 app = Flask(__name__)
+app.config.from_object("config.Config")
 
 @app.route("/create-household", methods=["POST"])
 def createHousehold():
@@ -11,7 +12,7 @@ def createHousehold():
     if json_data == None or "HousingType" not in json_data or type(json_data["HousingType"]) is not str:
         return jsonify({"Error" : "HousingType must be present in a json format"}) 
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
     try:
@@ -34,7 +35,7 @@ def addMember():
     if json_data == None or "HouseID" not in json_data or "Member" not in json_data:
         return jsonify({"Error" : "HouseID and Member must be present in a json format"}) 
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
     try:
@@ -57,7 +58,7 @@ def addMember():
 @app.route("/list-households", methods=["GET"])
 def listHouseholds():
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
     cursor.execute("SELECT H.HouseID, H.HousingType, M.Name, M.Gender, M.MaritalStatus, M.Spouse, M.OccupationType, M.AnnualIncome, M.DOB FROM HouseHold AS H, MemberLivesIn as M WHERE H.HouseID = M.HouseID ORDER BY H.HouseID ASC;")
@@ -72,7 +73,7 @@ def showHousehold():
     if json_data == None or "HouseID" not in json_data:
         return jsonify({"Error" : "HouseID must be present in a json format"}) 
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
     # Performing two queries instead of a merge as not all data is needed
@@ -109,7 +110,7 @@ def searchGrants():
         totalIncome = float(totalIncome)
 
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
 
@@ -139,7 +140,7 @@ def deleteHousehold():
     if json_data == None or "HouseID" not in json_data:
         return jsonify({"Error" : "HouseID must be present in a json format"}) 
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
     try:
@@ -164,7 +165,7 @@ def deleteMember():
     if json_data == None or "Name" not in json_data:
         return jsonify({"Error" : "Name must be present in a json format"}) 
     try:
-        conn, cursor = create_connection()
+        conn, cursor = create_connection(app.config)
     except:
         return jsonify({"Error" : "Unable to reach database"}) 
     cursor.execute("DELETE FROM MemberLivesIn WHERE Name = %s", json_data["Name"])
